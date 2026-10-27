@@ -1,0 +1,9 @@
+SNOWCORP IT SUPPORT AND SECURITY LAB
+Personal Project | October 2026
+
+- Built and administered a two-VM Windows Server 2025 and Windows 11 domain lab with Active Directory, DNS, employee accounts, and department security groups.
+
+- Configured Group Policy, share and NTFS permissions, and account-lockout controls; validated nine department-access tests and documented two resolved support scenarios.
+
+- Investigated Windows Security events, generated Active Directory inventory reports with PowerShell, and verified file backup and restoration using SHA-256 hashes.
+

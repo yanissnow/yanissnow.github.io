@@ -1,0 +1,46 @@
+SNOWCORP — WEBSITE ARCHIVE REVIEW
+Date: October 26, 2026
+
+SOURCE ARCHIVE
+IT-Support-and-Security-Lab.zip
+175 files: 139 PNG screenshots, 9 MP4 recordings, 12 TXT files,
+1 PowerShell script, 11 CSV files and 3 EVTX exports.
+The original uploaded archive was preserved unchanged.
+
+WEBSITE FILING CORRECTIONS
+46-DC01-HR-NTFS-Permissions.png shows IT share permissions.
+Its website filename is 44-DC01-IT-Share-Permissions.png.
+46-DC01-HR-NTFS-Permission.png shows HR NTFS permissions.
+Its website filename is 46-DC01-HR-NTFS-Permissions.png.
+After these label corrections, screenshot numbers 1–139 are present.
+
+The final report already contains the updated Session 10 presentation
+section. Its version line was still 1.0; the website copy labels it 1.1.
+
+VERIFICATION
+Parsed the preserved CSV exports and their run summaries.
+The final preserved version 1.1 run contains 4 users: 3 enabled,
+1 disabled and none locked out; all three Global Security groups
+have the expected direct member. Policy values match the report.
+
+Calculated SHA-256 directly from the uploaded 150-byte backup file.
+It matches Original-SHA256.csv and Restored-SHA256.csv:
+AFC2290325AE4AFF2A76C04A08310226C383451C4AFFCA4BA1A7361C06DD126A
+
+MEDIA
+Screenshot OCR screening and selected visual checks were performed.
+Key frames from the recordings were inspected. Video 05 shows an
+idle desktop, a blank display, and a domain password prompt near
+the end. It does not record a successful password submission.
+The original functional test remains documented in the work journal.
+
+Web video copies preserve the recording duration, are compressed
+for web playback, and omit audio. Original recordings are unchanged.
+
+EVENT LOGS
+All three EVTX exports are present with the expected filenames and
+sizes and EVTX file signatures. A full binary-event parse was not
+performed in this website review. The Windows readability checks
+and selected-event investigation are documented in the project.
+Raw EVTX exports remain in the original archive; this website
+provides the investigation report and the event screenshots.

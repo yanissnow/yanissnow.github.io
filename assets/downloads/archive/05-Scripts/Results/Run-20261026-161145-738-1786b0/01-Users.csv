@@ -1,0 +1,5 @@
+﻿"Name","Username","Enabled","LockedOut","PasswordNeverExpires","PasswordLastSetUtc","DistinguishedName"
+"Alex Morgan","alex.morgan","True","False","False","2026-10-18T23:08:35.0948249Z","CN=Alex Morgan,OU=IT,OU=Employees,OU=SnowCorp,DC=snowcorp,DC=test"
+"Emma Wilson","emma.wilson","True","False","False","2026-10-18T23:13:56.3613193Z","CN=Emma Wilson,OU=HR,OU=Employees,OU=SnowCorp,DC=snowcorp,DC=test"
+"James Carter","james.carter","True","False","False","2026-10-18T23:19:46.9837329Z","CN=James Carter,OU=Sales,OU=Employees,OU=SnowCorp,DC=snowcorp,DC=test"
+"Policy Test","policy.test","False","False","False","2026-10-19T19:50:32.7503462Z","CN=Policy Test,OU=IT,OU=Employees,OU=SnowCorp,DC=snowcorp,DC=test"

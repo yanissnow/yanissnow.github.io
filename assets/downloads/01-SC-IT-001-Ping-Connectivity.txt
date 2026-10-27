@@ -1,0 +1,140 @@
+IT Support and Security Lab — Support Ticket
+
+TICKET DETAILS
+Ticket ID: SC-IT-001
+Title: CLIENT01 cannot ping DC01
+Company: SnowCorp (fictional)
+Category: Network connectivity / Windows Firewall
+Priority: Low — isolated training lab
+Status: Resolved and verified in the recorded tests
+Incident and resolution date: October 13, 2026
+Related practical work: Session 2
+Follow-up verification date: October 19, 2026
+Ticket documentation date: October 25, 2026
+Record type: Retrospective ticket based on the completed lab work
+
+REPORTED PROBLEM
+CLIENT01 did not receive successful ping replies from DC01's planned
+IP address, 10.10.10.10, during initial lab network testing.
+
+IMPACT AND SCOPE
+The planned ICMP reachability check between the two lab computers failed.
+This ticket concerns ping testing on the isolated virtual network.
+Active Directory deployment had not yet started at the time of the issue.
+
+ENVIRONMENT
+VirtualBox internal network: SnowCorp-LAN
+Network: 10.10.10.0/24
+Subnet mask: 255.255.255.0
+DC01: 10.10.10.10
+CLIENT01: 10.10.10.20
+Default gateway: Blank, as planned for the isolated network
+Windows Firewall: Kept enabled on both machines
+
+INITIAL EVIDENCE
+The first CLIENT01 test showed three request timeouts and one
+"Destination host unreachable" message from CLIENT01 (10.10.10.20).
+Ping displayed 4 sent, 1 received, and 3 lost (75% loss).
+The received message was an unreachable response from CLIENT01;
+there were no successful Echo Replies from DC01.
+
+A later CLIENT01 retest showed four timeouts:
+4 sent, 0 received, 4 lost (100% loss).
+
+TROUBLESHOOTING
+1. Verified the computer identities and planned static IPv4 settings.
+2. Rechecked that DC01 was running with the correct address.
+3. Confirmed the recorded VirtualBox network configuration placed both
+   adapters on SnowCorp-LAN with their virtual cables connected.
+4. Repeated ping from CLIENT01 to 10.10.10.10.
+5. Ran arp -a on CLIENT01. Its ARP cache contained a dynamic entry
+   for 10.10.10.10 despite the failed ping.
+6. Investigated inbound ICMP filtering and added a restricted rule
+   on DC01.
+7. Retested CLIENT01-to-DC01 ping successfully.
+8. Added the corresponding restricted inbound rule on CLIENT01
+   and verified ping in the reverse direction.
+
+CAUSE ASSESSMENT
+The successful retry after adding DC01's scoped inbound Echo Request
+allow rule supports Windows Firewall ICMP filtering as the explanation
+for the repeated timeouts.
+
+The exact cause of the initial "Destination host unreachable" message
+was not separately established. The ARP cache entry helped guide the
+next check but did not by itself establish that ping traffic was allowed.
+
+RESOLUTION
+Configured restricted inbound ICMPv4 Echo Request rules on both VMs.
+The following names and filters reflect the verified follow-up state.
+
+DC01 rule:
+Display name: SnowCorp-Allow-Ping-From-CLIENT01
+Enabled: True
+Direction: Inbound
+Action: Allow
+Protocol: ICMPv4
+ICMP type: 8 (Echo Request)
+Local address: 10.10.10.10
+Remote address: 10.10.10.20
+Profiles: Domain, Private, Public (Any)
+
+CLIENT01 rule:
+Display name: SnowCorp-Allow-Ping-From-DC01
+Enabled: True
+Direction: Inbound
+Action: Allow
+Protocol: ICMPv4
+ICMP type: 8 (Echo Request)
+Local address: 10.10.10.20
+Remote address: 10.10.10.10
+Profiles: Domain, Private, Public (Any)
+
+VERIFICATION
+CLIENT01 to DC01:
+Command: ping 10.10.10.10
+Result: 4 sent, 4 received, 0 lost (0% loss).
+Replies came from 10.10.10.10.
+
+DC01 to CLIENT01:
+Command: ping 10.10.10.20
+Result: 4 sent, 4 received, 0 lost (0% loss).
+Replies came from 10.10.10.20.
+
+Both tests matched the expected result.
+
+FOLLOW-UP
+On October 19, verified that Domain, Private, and Public firewall
+profiles were enabled on both machines.
+Verified that both rules were enabled inbound Allow rules and checked
+their ICMP type and local/remote address filters.
+
+Corrected the DC01 rule's display-name spelling from Form to From
+during the follow-up work; the rule filters were retained.
+
+CLOSURE
+Closed on the basis of successful ping tests in both directions.
+The scoped rules restored the planned ICMP test while Windows Firewall
+remained enabled.
+
+This verification establishes successful ICMP reachability in the
+recorded tests. DNS, domain sign-in, and application access were verified
+separately in later project work.
+
+EVIDENCE
+All screenshot files are in 02-Screenshots.
+
+11-CLIENT01-Ping-Failed.png
+12-CLIENT01-Ping-and-ARP.png
+13-DC01-Ping-Rule-Scope.png
+14-CLIENT01-Ping-DC01-Success.png
+15-DC01-Ping-CLIENT01-Success.png
+
+Follow-up verification:
+83-DC01-Firewall-Status-and-Ping-Rule.png
+84-DC01-Ping-Rule-Filters.png
+88-CLIENT01-Firewall-Status-and-Ping-Rule.png
+89-CLIENT01-Ping-Rule-Filters.png
+
+Related written record: Work Journal, Session 2 and follow-up work.
+

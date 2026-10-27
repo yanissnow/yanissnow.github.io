@@ -1,0 +1,18 @@
+﻿SNOWCORP ACTIVE DIRECTORY REPORT
+Script version: 1.0
+Generated UTC: 2026-10-26T20:11:45.8612760Z
+Executed on: DC01
+Executed as: SNOWCORP\Administrator
+Queried server: DC01.snowcorp.test
+Domain: snowcorp.test
+User search base: OU=Employees,OU=SnowCorp,DC=snowcorp,DC=test
+Users collected: 4
+Enabled users: 3
+Disabled users: 1
+Locked-out users: 0
+Department groups collected: 3
+Group membership: Direct members only
+Policy scope: Default domain password and lockout policy
+Results folder: C:\SnowCorp-Scripts\Results\Run-20261026-161145-738-1786b0
+Report collection completed successfully.
+Compare the CSV values with the documented SnowCorp configuration.

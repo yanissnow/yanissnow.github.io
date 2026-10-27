@@ -1,0 +1,192 @@
+IT Support and Security Lab — Security Investigation
+
+CASE
+Case ID: SC-SEC-001
+Company: SnowCorp (fictional)
+Type: Controlled lab exercise
+Investigation dates: October 20 and October 25, 2026
+Report date: October 25, 2026
+Displayed event times: Eastern Daylight Time (UTC-04:00)
+
+GOAL
+Investigate a domain account lockout and administrator unlock, correlate
+a controlled failed sign-in across the workstation and domain controller,
+and preserve the relevant Windows Security logs outside the VMs.
+
+SUMMARY
+Reviewed the October 19 lockout and administrator unlock of policy.test.
+On October 25, submitted one deliberately incorrect password on CLIENT01
+and correlated the resulting failed-logon and Kerberos failure records.
+The matching account, source address, timestamps, and failure codes
+support an incorrect-password explanation for the controlled attempt.
+
+Preserved three EVTX exports on the laptop and checked their filenames,
+sizes, and readability. Disabled policy.test after testing.
+
+ENVIRONMENT
+Domain: snowcorp.test
+NetBIOS name: SNOWCORP
+Domain controller: DC01.snowcorp.test / 10.10.10.10
+Workstation: CLIENT01.snowcorp.test / 10.10.10.20
+Network: SnowCorp-LAN / isolated VirtualBox internal network
+Test account: SNOWCORP\policy.test
+Test account location: SnowCorp/Employees/IT
+Department group membership: None assigned
+
+AUDITING PREPARATION
+Created SnowCorp-DC-Auditing and linked it to the Domain Controllers OU.
+
+Configured Success and Failure auditing for:
+Audit Credential Validation
+Audit Kerberos Authentication Service
+Audit User Account Management
+Audit Logon
+
+Enabled the security option that forces audit subcategory settings
+to override audit category settings.
+
+Applied computer policy with gpupdate. Verified the effective settings
+using auditpol and confirmed GPO application using gpresult.
+CLIENT01 already had Success and Failure auditing for Logon.
+
+EVENT TIMELINE
+October 19, 2026 — 3:59:19 PM
+Computer: DC01.snowcorp.test
+Security event: 4740
+Target account: SNOWCORP\policy.test
+Caller Computer Name: CLIENT01
+Finding: The domain account was locked out during the earlier controlled
+account-lockout test.
+
+October 19, 2026 — 4:04:25 PM
+Computer: DC01.snowcorp.test
+Security event: 4767
+Target account: SNOWCORP\policy.test
+Subject account: SNOWCORP\Administrator
+Finding: The administrator unlocked the account.
+Elapsed time since the recorded lockout: 5 minutes, 6 seconds.
+
+October 25, 2026 — 12:58:07 PM
+Computer: DC01.snowcorp.test
+Security event: 4771
+Target account: SNOWCORP\policy.test
+Client address: ::ffff:10.10.10.20
+Client port: 49707
+Failure code: 0x18
+Finding: Kerberos pre-authentication failed. The code indicates that
+an incorrect password was supplied. The client address identifies
+CLIENT01's IPv4 address in IPv4-mapped IPv6 notation.
+
+October 25, 2026 — 12:58:08 PM
+Computer: CLIENT01.snowcorp.test
+Security event: 4625
+Target account: SNOWCORP\policy.test
+Logon type: 2 (interactive)
+Status: 0xC000006D
+SubStatus: 0xC000006A
+Authentication package: Negotiate
+Workstation name: CLIENT01
+Source network address: 127.0.0.1
+Finding: The interactive sign-in failed. The general status describes
+an authentication failure; the substatus identifies an incorrect password.
+The loopback address describes the local workstation logon context.
+
+ANALYSIS
+The October 25 records concern the same account and occur one second
+apart. DC01 identifies CLIENT01's planned IP address, while CLIENT01
+records the failed interactive sign-in. Both failure codes support
+the deliberately incorrect password used in the test.
+
+The October 19 lockout is a separate earlier test. Event 4740 records
+the lockout, and event 4767 identifies the administrator's unlock action.
+The Audit Success label on those account-management records describes
+the recorded management action, not a successful user sign-in.
+
+The reviewed activity was deliberately generated in the lab. It is
+documented as controlled testing rather than an observed external attack.
+
+PRESERVED LOG FILES
+Location within the laptop's project folder:
+07-Security-Investigation\EVTX
+
+File: DC01-Security-Before-New-Test.evtx
+Size: 26,284,032 bytes
+Exported: October 20, 2026, 1:47:53 PM
+Source directory on DC01:
+C:\SnowCorp-Evidence\Session8
+
+File: DC01-Security-After-Test-2026-10-25.evtx
+Size: 27,332,608 bytes
+Exported: October 25, 2026, 1:22:27 PM
+Source directory on DC01:
+C:\SnowCorp-Evidence\Session8
+
+File: CLIENT01-Security-After-Test-2026-10-25.evtx
+Size: 21,041,152 bytes
+Exported: October 25, 2026, 1:30:51 PM
+Actual source directory on CLIENT01:
+C:\Windows\System32\SnowCorp-Evidence\Session8
+
+These are full Security-log exports made with wevtutil epl.
+The export operation copied the logs without clearing them.
+The historical Session8 directory name was retained during transfer.
+
+EXPORT AND TRANSFER VERIFICATION
+Installed Guest Additions inside CLIENT01 and verified VBoxService
+was running. Used a temporary VirtualBox shared folder to transfer
+CLIENT01's export and both DC01 exports to the laptop.
+
+The initial CLIENT01 export path omitted the backslash after C:,
+placing its folder under the PowerShell working directory.
+Located the existing export under C:\Windows\System32 and copied it
+from its actual absolute path. Corrected a mistyped VBOXSVR name
+during transfer. The original export was retained.
+
+Confirmed all three filenames and sizes on the laptop.
+Used Get-WinEvent to read one event from each saved file successfully.
+This was a readability check, not a review of every exported event.
+
+CLEANUP
+Verified policy.test had Enabled: False and LockedOut: False.
+Removed the temporary SnowCorpEvidence shared-folder connection.
+Confirmed both VMs were shut down after the practical work.
+
+LIMITATIONS
+The exact number of incorrect submissions during the October 19
+lockout test was not independently counted.
+Automatic unlocking after the configured 15 minutes was not tested.
+The later audit configuration does not create missing historical events.
+This report covers the selected records and the controlled tests.
+
+SCREENSHOT EVIDENCE
+Screenshot files are stored in 02-Screenshots.
+
+90-91: Recovery snapshots before the auditing work.
+92-99: Audit baseline, GPO configuration, and effective settings.
+100-101: Historical lockout account, timestamp, and caller.
+102: Historical administrator unlock event.
+103: DC01 export before the new failed-sign-in test.
+104-105: Test account preparation and CLIENT01 Logon auditing.
+106: Deliberately failed sign-in on CLIENT01.
+107-108: CLIENT01 event 4625, account, time, and failure details.
+109-110: DC01 event 4771, account, time, client address, and failure code.
+111: Test account disabled after investigation.
+112-113: DC01 and CLIENT01 export checks inside the VMs.
+114: Guest Additions service running on CLIENT01.
+115: Three exported log files preserved on the laptop.
+116: Successful laptop readability checks for all three exports.
+117: Temporary shared-folder connection removed.
+
+REFERENCES
+Microsoft Learn — Event 4625: An account failed to log on.
+https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4625
+
+Microsoft Learn — Event 4771: Kerberos pre-authentication failed.
+https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4771
+
+Microsoft Learn — Event 4740: A user account was locked out.
+https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4740
+
+Microsoft Learn — Event 4767: A user account was unlocked.
+https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4767
+

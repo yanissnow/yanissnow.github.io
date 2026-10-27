@@ -1,0 +1,683 @@
+IT Support and Security Lab — Project Plan
+
+GOAL
+Build a simulated company network and demonstrate IT support,
+Windows administration, and basic security skills.
+
+FICTIONAL COMPANY
+Name: SnowCorp
+Departments: IT, HR, Sales
+
+HOST COMPUTER
+Model: HP OmniBook X Flip
+RAM: 16 GB
+Operating system: Windows 11 Home
+Free storage at project start: 802 GB
+Setup: Temporary virtual machines on the laptop
+Virtualization software: Oracle VirtualBox 7.2.20 r175154
+VM storage: C:\SnowCorp-Lab-VMs
+
+LAB COMPUTERS
+DC01:
+Operating system: Windows Server 2025 Standard Evaluation
+Installation: Desktop Experience
+RAM: 4 GB
+Virtual CPUs: 2
+Virtual disk: 60 GB
+Roles: Active Directory Domain Services, DNS, shared folders
+
+CLIENT01:
+Operating system: Windows 11 Enterprise Evaluation
+RAM: 4 GB
+Virtual CPUs: 3
+Virtual disk: 80 GB, dynamically allocated
+Security: UEFI, TPM 2.0, Secure Boot
+Purpose: Test employee logins, policies, and folder access
+
+Guest Additions is installed on CLIENT01.
+Its service was verified as running during Session 8.
+
+DOMAIN
+DNS domain name: snowcorp.test
+NetBIOS domain name: SNOWCORP
+Forest functional level: Windows Server 2025
+Domain functional level: Windows Server 2025
+Domain controller: DC01
+
+Verified Active Directory, DNS, and Netlogon services.
+Verified DNS host and domain controller LDAP SRV lookups.
+Confirmed NETLOGON and SYSVOL shares exist.
+CLIENT01 is domain joined and its secure channel was verified.
+
+NETWORK
+VirtualBox internal network: SnowCorp-LAN
+Network: 10.10.10.0/24
+Subnet mask: 255.255.255.0
+DC01 IP address: 10.10.10.10
+CLIENT01 IP address: 10.10.10.20
+Preferred DNS for both: 10.10.10.10
+Alternate DNS for both: blank
+Default gateway for both: blank
+
+The lab network is isolated.
+Temporary internet access will be configured when needed.
+
+Windows Firewall remains enabled on both machines.
+
+Configured restricted inbound ICMPv4 Echo Request rules:
+DC01: SnowCorp-Allow-Ping-From-CLIENT01
+CLIENT01: SnowCorp-Allow-Ping-From-DC01
+
+The rules allow Echo Request traffic between the two planned
+lab IP addresses on Domain, Private, and Public profiles.
+
+Successful ping tests were captured in both directions.
+
+Follow-up evidence confirms firewall status and the finished
+rules, including their protocol and IP-address restrictions.
+
+ACTIVE DIRECTORY STRUCTURE
+snowcorp.test
+  SnowCorp
+    Employees
+      IT
+      HR
+      Sales
+    Groups
+    Workstations
+
+CLIENT01 is located in the Workstations OU.
+DC01 remains in the Domain Controllers OU.
+
+EMPLOYEE ACCOUNTS AND GROUPS
+Alex Morgan:
+Username: alex.morgan
+Department: IT
+Group: GG_IT
+
+Emma Wilson:
+Username: emma.wilson
+Department: HR
+Group: GG_HR
+
+James Carter:
+Username: james.carter
+Department: Sales
+Group: GG_Sales
+
+All three department groups use Global scope and Security type.
+Group scope, type, and department memberships were verified.
+Employee domain sign-ins were verified on CLIENT01.
+
+All three employees completed their required first-login
+password changes before Session 7's password-policy changes.
+
+Script reports in Sessions 8 and 10 confirmed one direct
+employee member in each department group.
+
+TEST ACCOUNT
+Display name: Policy Test
+Username: policy.test
+Location: SnowCorp/Employees/IT
+Purpose: Controlled password, lockout, and failed-sign-in tests
+Department groups: None assigned
+Current status: Disabled and not locked out
+
+The account was temporarily re-enabled for Session 8's
+investigation and disabled again after testing.
+
+Its disabled, unlocked state was verified directly and
+reconfirmed in the Session 10 recorded script run.
+
+DEPARTMENT SHARES
+Server folders:
+C:\SnowCorp-Shares\IT
+C:\SnowCorp-Shares\HR
+C:\SnowCorp-Shares\Sales
+
+Network shares:
+\\DC01\IT
+\\DC01\HR
+\\DC01\Sales
+
+NTFS permissions on each department folder:
+Administrators: Full control
+SYSTEM: Full control
+Corresponding department group: Modify
+
+NTFS inheritance is disabled on each department folder.
+The listed entries apply to this folder, subfolders, and files.
+
+Share permissions:
+Administrators: Full Control
+Corresponding department group: Change and Read
+Everyone: Removed
+Deny entries: None configured
+
+Evidence captures the department permissions and follow-up
+verification of Administrators' Full Control share permissions.
+
+ACCESS TEST RESULTS
+Alex Morgan:
+IT: Allowed
+HR: Denied
+Sales: Denied
+
+Emma Wilson:
+IT: Denied
+HR: Allowed
+Sales: Denied
+
+James Carter:
+IT: Denied
+HR: Denied
+Sales: Allowed
+
+All nine department access tests matched the expected results.
+
+File creation, saving, reopening, modification, and deletion
+were tested in each employee's authorized share.
+
+Temporary modification-test files were deleted.
+Original department test files were retained.
+
+DOMAIN PASSWORD AND LOCKOUT POLICIES
+Policy: Default Domain Policy
+
+Minimum password length: 14 characters
+Password complexity: Enabled
+Password history: 24 passwords
+Maximum password age: 42 days
+Minimum password age: 1 day
+Reversible password encryption: Disabled
+
+Account lockout threshold: 10 failed attempts
+Account lockout duration: 15 minutes
+Reset account lockout counter after: 15 minutes
+Allow Administrator account lockout: Enabled, as recorded
+in the configured Group Policy settings
+
+The 42-day maximum password age and other existing password
+settings were retained for this lab.
+
+Effective domain password and lockout settings were verified
+on DC01 using Get-ADDefaultDomainPasswordPolicy.
+
+The Session 8 script exported the same domain policy values.
+Administrator-account lockout behavior was not tested.
+
+PASSWORD AND LOCKOUT TEST RESULTS
+An 8-character password was rejected when creating policy.test.
+A compliant password was accepted and the account was created.
+
+Initial domain sign-in succeeded on CLIENT01.
+
+Repeated incorrect passwords caused account lockout.
+The locked state was confirmed on CLIENT01 and DC01.
+
+An administrator unlocked the account.
+Successful sign-in was verified afterward.
+The account was signed out and disabled after testing.
+
+Automatic unlocking after 15 minutes has not been separately tested.
+The exact number of submitted incorrect passwords was not recorded.
+
+Complexity rejection, password history, and password-age behavior
+have not been separately tested.
+
+Existing employee password lengths have not been verified
+against the new 14-character minimum.
+
+WORKSTATION SECURITY POLICY
+GPO name: SnowCorp-Workstation-Security
+Linked OU: SnowCorp/Workstations
+Machine inactivity limit: 300 seconds
+
+Updated Group Policy on CLIENT01.
+Verified the GPO appears under Applied Group Policy Objects.
+
+Restarted CLIENT01 and verified its effective inactivity
+limit is 300 seconds.
+
+Tested automatic locking after inactivity.
+Confirmed a password was required to unlock the workstation.
+
+The existing automatic-lock recording was retained at the
+project owner's request. The behavior was tested in Session 7.
+An independent review of that recording was not performed
+during the final portfolio preparation.
+
+SECURITY AUDITING
+GPO name: SnowCorp-DC-Auditing
+Linked OU: Domain Controllers
+
+Configured Success and Failure auditing for:
+Credential Validation
+Kerberos Authentication Service
+User Account Management
+Logon
+
+Enabled the setting that forces audit subcategory policy
+settings to override audit policy category settings.
+
+Updated Group Policy on DC01.
+Verified effective auditing with auditpol.
+Verified SnowCorp-DC-Auditing appears in applied computer GPOs.
+
+Verified CLIENT01 already audits Logon success and failure.
+
+SECURITY INVESTIGATION
+Case reference: SC-SEC-001
+Report: 01-Failed-Logon-and-Lockout-Investigation.txt
+Location: 07-Security-Investigation
+
+Reviewed the earlier controlled lockout on October 19, 2026:
+DC01 event 4740: policy.test locked out; caller CLIENT01.
+DC01 event 4767: SNOWCORP\Administrator unlocked policy.test.
+
+The recorded events were 5 minutes and 6 seconds apart.
+
+Performed a fresh controlled incorrect-password test
+on October 25, 2026 and correlated:
+
+DC01 event 4771:
+Kerberos pre-authentication failure.
+Failure code: 0x18.
+Client address: ::ffff:10.10.10.20, matching CLIENT01.
+
+CLIENT01 event 4625:
+Failed interactive sign-in for policy.test.
+Logon type: 2.
+Status: 0xC000006D.
+Substatus: 0xC000006A, indicating an incorrect password.
+
+Correlated the account, timestamps, and source information.
+
+The CLIENT01 event's 127.0.0.1 address is loopback and was
+not treated as the address of a remote attacker.
+
+The October 19 lockout and October 25 failed sign-in are
+separate controlled tests, not one continuous incident.
+
+Exported and preserved three Security event logs:
+DC01-Security-Before-New-Test.evtx
+DC01-Security-After-Test-2026-10-25.evtx
+CLIENT01-Security-After-Test-2026-10-25.evtx
+
+Laptop location: 07-Security-Investigation\EVTX
+
+Verified all three files are present and readable with
+Get-WinEvent on the laptop.
+
+No log-clearing operation was performed.
+Cryptographic hashes of these EVTX exports were not collected.
+
+SUPPORT TICKETS
+Location: 04-Tickets
+
+SC-IT-001:
+File: 01-SC-IT-001-Ping-Connectivity.txt
+Subject: Investigating failed ping between CLIENT01 and DC01.
+
+Documents the observed failure, ARP evidence, restricted
+firewall rules, and successful connectivity retests.
+
+Written retrospectively from the earlier recorded lab work.
+
+SC-IT-002:
+File: 02-SC-IT-002-Account-Lockout.txt
+Subject: Controlled policy.test account lockout and recovery.
+
+Documents lockout confirmation, administrator unlock,
+successful sign-in, and final test-account cleanup.
+
+Written retrospectively from the recorded tests and events.
+
+POWERSHELL REPORTING SCRIPT
+File: 01-SnowCorp-AD-Report.ps1
+Current version: 1.1
+Laptop location: 05-Scripts
+DC01 location: C:\SnowCorp-Scripts
+
+Purpose:
+Collect an Active Directory inventory and the default domain
+password and lockout policy without changing AD objects.
+
+Collects:
+Users beneath SnowCorp/Employees, including account state.
+Direct members of GG_IT, GG_HR, and GG_Sales.
+Default domain password and lockout settings.
+
+Each run creates a separate results folder containing:
+00-Run-Summary.txt
+01-Users.csv
+02-Department-Groups.csv
+03-Password-Lockout-Policy.csv
+
+Default results location on DC01:
+C:\SnowCorp-Scripts\Results
+
+Verified results:
+Users collected: 4
+Enabled users: 3
+Disabled users: 1
+Locked-out users: 0
+Department groups collected: 3
+Direct members per department group: 1
+
+Corrected an initial version 1.0 default-output-path error.
+
+Version 1.1 ran successfully without an explicit OutputRoot
+argument and returned exit code 0.
+
+Read all three exported CSV reports back into PowerShell.
+Verified their displayed values against the lab configuration.
+
+Verified the run summary identifies version 1.1, DC01,
+the domain, collection scope, and successful completion.
+
+During Session 8, copied the Results folder to the laptop's
+05-Scripts folder, retaining the earlier runs.
+
+Validated laptop run folder:
+Run-20261026-162932-715-7c7c0f
+
+Verified its four files are present and its summary opens
+correctly on the laptop.
+
+During Session 10, recorded another successful execution
+on DC01 using the same version 1.1 script.
+
+Demonstration run folder on DC01:
+C:\SnowCorp-Scripts\Results\Run-20261026-211859-181-0076b0
+
+The recorded run returned exit code 0 and the same expected
+account counts, memberships, and policy values.
+
+The Session 8 validated report copy remains on the laptop.
+The additional Session 10 run created new reports on DC01.
+
+The script reports direct group membership and the default
+domain policy. It does not produce effective nested-group
+membership or per-user fine-grained password-policy results.
+
+BACKUP AND RESTORE
+Test reference: SC-BR-001
+Date: October 26, 2026
+User: SNOWCORP\alex.morgan on CLIENT01
+
+Source and restored file:
+\\DC01\IT\Backup-Restore-Test\SnowCorp-Backup-Test.txt
+
+Server location:
+C:\SnowCorp-Shares\IT\Backup-Restore-Test\SnowCorp-Backup-Test.txt
+
+Laptop project location: 08-Backup-and-Restore
+
+Preserved backup:
+Backup\SnowCorp-Backup-Test.txt
+
+Verification records:
+Verification\Original-SHA256.csv
+Verification\Restored-SHA256.csv
+Verification\Restore-Comparison.txt
+
+Created a dedicated five-line test file in the IT share.
+Calculated its original SHA-256 hash before backing it up.
+
+Copied the file to the laptop through a temporary CLIENT01
+VirtualBox shared folder named SnowCorpBackup.
+
+Verified the backup's SHA-256 hash from CLIENT01.
+Independently read the laptop copy with host PowerShell
+and confirmed its hash matches the saved original record.
+
+Deleted only the dedicated test file from the IT share.
+Verified Test-Path returned False.
+
+Restored the file from the laptop backup to its original path.
+Verified Test-Path returned True and displayed its original
+five lines using Get-Content.
+
+Calculated the restored file's SHA-256 hash.
+Confirmed it matches the original hash.
+
+Original, backup, and restored SHA-256:
+AFC2290325AE4AFF2A76C04A08310226C383451C4AFFCA4BA1A7361C06DD126A
+
+Preserved the original and restored hash records and a text
+comparison result on the laptop. The saved comparison is:
+Saved original and restored hashes match: True
+
+Removed the temporary SnowCorpBackup shared-folder mapping.
+Shut down CLIENT01, followed by DC01, through Windows.
+
+The exercise verifies recovery of this file's contents.
+It does not verify restoration of NTFS permissions, system
+state, or the complete server or virtual machines.
+
+The backup is outside the VM virtual disks but remains on
+the same laptop's physical storage. Recovery from a separate
+physical device or a cloud backup was not tested.
+
+FINAL REPORT AND PRESENTATION
+Location: 06-Final-Report
+
+Final report:
+SnowCorp-Final-Report.txt
+Report version: 1.1
+
+CV project description:
+CV-Project-Description.txt
+Intended CV section: Projects
+Project classification: Personal Project
+
+Recorded and reviewed two short overview clips:
+08-SnowCorp-Overview-Active-Directory.mp4
+Duration: Approximately 1 minute 18 seconds.
+
+09-SnowCorp-Overview-PowerShell-Report.mp4
+Duration: Approximately 1 minute 42 seconds.
+
+Video 08 shows the OU structure, employee accounts,
+department groups, GG_IT settings and Alex's membership,
+and CLIENT01 in Workstations.
+
+Video 09 shows DC01 and administrator identity, script
+execution, account states, department memberships,
+password and lockout settings, the report path, and exit code 0.
+
+Retained the existing department-access demonstration:
+01-James-Sales-Allowed-HR-Denied.mp4
+
+Videos 06 and 07 remain the backup-and-restore demonstrations.
+The restored-file hash result is captured separately
+in screenshot 135 and the saved verification records.
+
+FILE TRANSFER AND CLEANUP
+Used temporary VirtualBox shared folders on CLIENT01
+to transfer exported logs, the script, and its results,
+and to copy the Session 9 test file and verification records.
+
+During Session 8, used DC01's administrative share with the
+domain administrator account for transfers between the VMs.
+
+Removed the temporary SnowCorpEvidence mapping after log export.
+Removed the temporary SnowCorpScripts mapping after report export.
+Removed the temporary SnowCorpBackup mapping after restore verification.
+
+Captured evidence that the temporary mappings were removed.
+
+RECOVERY POINTS
+DC01:
+01-Clean-Server-Install
+02-Network-Ready
+03-Domain-Joined
+04-Users-and-Groups-Ready
+05-Department-Shares-Ready
+06-Security-Policies-Ready
+07-Auditing-and-Scripting-Ready
+08-Backup-and-Restore-Verified
+
+CLIENT01:
+01-Clean-Client-Install
+02-Network-Ready
+03-Domain-Joined
+04-Users-and-Groups-Ready
+05-Department-Shares-Ready
+06-Security-Policies-Ready
+07-Auditing-and-Scripting-Ready
+08-Backup-and-Restore-Verified
+
+The 03-Domain-Joined snapshots precede the OU, group,
+and employee-account configuration.
+
+The 04-Users-and-Groups-Ready snapshots precede the
+department-folder and sharing configuration.
+
+The 05-Department-Shares-Ready snapshots precede
+Session 7's security-policy changes.
+
+The 06-Security-Policies-Ready snapshots precede
+Session 8's auditing changes.
+
+The 07-Auditing-and-Scripting-Ready snapshots were saved
+after Session 8's practical work and transfer cleanup.
+
+Updated snapshot evidence was saved for both VMs.
+
+The 08-Backup-and-Restore-Verified snapshots were created
+after Session 9's file restoration, verification, and cleanup.
+Both closing snapshots and screenshots 138 and 139 were
+confirmed saved before Session 10's demonstrations.
+
+The 08 snapshots remain the configuration recovery points.
+Session 10 viewed existing settings and ran the reporting script.
+Its additional report files were generated after these snapshots.
+
+Snapshots provide VM recovery points.
+They do not replace a separate backup.
+The Session 9 file backup remains outside the VM disks
+on the same laptop.
+
+COMPLETED WORK
+Technical exercises in Sessions 1 through 9 completed.
+Session 10 report, overview recordings, and CV description prepared.
+Closing snapshot confirmation completed.
+
+Installed and updated both virtual machines.
+Configured isolated networking and static IP addresses.
+Verified connectivity using restricted firewall rules.
+Deployed and verified Active Directory and DNS.
+Joined CLIENT01 to the domain.
+Created organizational units, department groups, and employees.
+Verified domain sign-ins and department memberships.
+Configured department shares and group-based permissions.
+Tested authorized access and denied cross-department access.
+Tested file creation, modification, and deletion.
+Configured and verified password and account-lockout policies.
+Tested short-password rejection and account lockout.
+Performed administrator unlock and verified restored sign-in.
+Applied and tested workstation automatic locking.
+Collected follow-up firewall, permission, group, and snapshot evidence.
+Configured and verified domain controller auditing.
+Investigated failed-sign-in, lockout, and unlock events.
+Preserved exported Security logs and verified readability.
+Completed two formal support tickets from recorded lab scenarios.
+Created, corrected, and tested the PowerShell reporting script.
+Verified exported reports and preserved them on the laptop.
+Disabled policy.test after testing and removed transfer mappings.
+Saved recovery points after the completed Session 8 changes.
+Backed up a dedicated IT-share test file outside the VMs.
+Verified the laptop backup against the original SHA-256 hash.
+Deleted and restored the test file to its original location.
+Verified the restored contents and matching SHA-256 hash.
+Preserved the backup and verification records on the laptop.
+Removed the backup-transfer mapping and shut down both VMs.
+Confirmed the closing recovery snapshots and their screenshots.
+Prepared and updated the final report.
+Recorded and reviewed Active Directory and PowerShell overview clips.
+Reused the existing department-access demonstration.
+Reconfirmed account states and policy values in the script demo.
+Prepared and saved the CV project description.
+Shut down both VMs after the demonstrations.
+
+EVIDENCE
+Screenshot numbering reaches 139.
+Closing snapshot screenshots 138 and 139 are confirmed saved.
+
+Work journal and project plan.
+Final report, version 1.1.
+CV project description.
+Two formal support tickets.
+Security investigation report and three exported EVTX files.
+PowerShell script, three CSV reports, and a summary per run.
+Backup test file, original and restored hash CSV records,
+and saved restore-comparison result.
+
+Videos:
+01-James-Sales-Allowed-HR-Denied.mp4
+02-Alex-IT-File-Deletion.mp4
+03-Emma-HR-File-Deletion.mp4
+04-James-Sales-File-Deletion.mp4
+05-CLIENT01-Automatic-Inactivity-Lock.mp4
+06-CLIENT01-Backup-Test-File-Deletion.mp4
+07-CLIENT01-Backup-Test-File-Restored.mp4
+08-SnowCorp-Overview-Active-Directory.mp4
+09-SnowCorp-Overview-PowerShell-Report.mp4
+
+Videos 01 through 04 and 06 through 09 were reviewed.
+Video 05 was retained at the project owner's request.
+An independent review of Video 05 was not performed during
+final portfolio preparation.
+
+Video 01 demonstrates Sales file access and HR access denied.
+Videos 02 through 04 demonstrate department test-file deletion.
+Video 06 demonstrates deletion of the dedicated backup-test file.
+Video 07 demonstrates restoration and the recovered file contents.
+The restored SHA-256 result is recorded separately in screenshot 135.
+Videos 08 and 09 provide the final directory and script overviews.
+
+Evidence ranges:
+01–80: Core setup, domain, accounts, shares, and policy tests.
+81–89: Follow-up snapshot, firewall, share, and group evidence.
+90–117: Recovery points, auditing, event investigation,
+log preservation, and transfer cleanup.
+118–125: Script results, CSV validation, report preservation,
+and script-transfer cleanup.
+126–127: Auditing-and-Scripting-Ready recovery snapshots.
+128–137: Backup-file creation, original and backup hashes,
+deleting and restoring the test file, restored-hash validation,
+verification-record preservation, and transfer cleanup.
+138–139: Backup-and-Restore-Verified recovery snapshots.
+The new Session 10 evidence consists of videos and documents.
+
+REMAINING PROJECT WORK
+None within the defined project scope.
+
+CURRENT STATUS
+Project status: Completed
+Completion date: October 26, 2026
+Sessions completed: 1 through 10
+Final report version: 1.1
+Screenshot evidence: 01 through 139
+Video evidence: 01 through 09
+
+The Windows domain lab, department permissions, security
+policies, support tickets, event investigation, PowerShell
+reporting, and verified file backup and restoration are complete
+for the documented lab scope.
+
+The final report, overview recordings, CV project description,
+and Session 10 work-journal entry are prepared and saved.
+The project plan has been reconciled with these records.
+
+The existing automatic-lock recording was retained at the
+project owner's request. Its independent video review was
+not part of the completed final review.
+
+Both VMs are powered off.
+Configuration recovery point on both VMs:
+08-Backup-and-Restore-Verified
+
+The documented test limits remain part of the completed report.
